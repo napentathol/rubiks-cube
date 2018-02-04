@@ -25,7 +25,11 @@ const rubik = (function () {
     function tick() {
         try {
             if (solver !== null) {
-                cube.commandRotate(solver.getRotation(cube.getTileObj()));
+                let rotCommand = solver.getRotation(cube.getTileObj());
+
+                if(rotCommand !== null) {
+                    cube.commandRotate(rotCommand);
+                }
 
                 if(solver.isCompleted(cube.getTileObj())) {
                     solver = null;

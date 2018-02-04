@@ -32,5 +32,103 @@ const constants = (function () {
         YELLOW: 6,
         GREEN: 5,
         BLUE: 2,
+
+        UP: "up",
+        RIGHT: "right",
+        DOWN: "down",
+        LEFT: "left"
     }
 })();
+
+constants.COLOR_DATA = {
+    white: {
+        name:   'white',
+        type:   constants.WHITE,
+        up:     'orange',
+        left:   'green',
+        down:   'red',
+        right:  'blue'
+    },
+    red: {
+        name:   'red',
+        type:   constants.RED,
+        up:     'white',
+        left:   'green',
+        down:   'yellow',
+        right:  'blue'
+    },
+    orange: {
+        name:   'orange',
+        type:   constants.ORANGE,
+        up:     'yellow',
+        left:   'green',
+        down:   'white',
+        right:  'blue'
+    },
+    yellow: {
+        name:   'yellow',
+        type:   constants.YELLOW,
+        up:     'red',
+        left:   'green',
+        down:   'orange',
+        right:  'blue'
+    },
+    green: {
+        name:   'green',
+        type:   constants.GREEN,
+        up:     'white',
+        left:   'orange',
+        down:   'yellow',
+        right:  'red'
+    },
+    blue: {
+        name:   'blue',
+        type:   constants.BLUE,
+        up:     'white',
+        left:   'red',
+        down:   'yellow',
+        right:  'orange'
+    },
+};
+
+constants.TYPED_COLOR_DATA = {
+    1: constants.COLOR_DATA.white,
+    2: constants.COLOR_DATA.blue,
+    3: constants.COLOR_DATA.red,
+    4: constants.COLOR_DATA.orange,
+    5: constants.COLOR_DATA.green,
+    6: constants.COLOR_DATA.yellow
+};
+
+constants.UTILS = {
+    facingFromTypeToType: function(from,to) {
+        if(constants.TYPED_COLOR_DATA[from].up === constants.TYPED_COLOR_DATA[to].name) {
+            return constants.UP;
+        } else if(constants.TYPED_COLOR_DATA[from].right === constants.TYPED_COLOR_DATA[to].name) {
+            return constants.RIGHT;
+        } else if(constants.TYPED_COLOR_DATA[from].down === constants.TYPED_COLOR_DATA[to].name) {
+            return constants.DOWN;
+        } else if(constants.TYPED_COLOR_DATA[from].left === constants.TYPED_COLOR_DATA[to].name) {
+            return constants.LEFT;
+        }
+        throw "No facing from type! " + {
+            from: from,
+            to: to,
+        }
+    },
+    turnFromFacingToFacingCounterClockwise: function(from,to) {
+        return from === constants.UP        && to === constants.RIGHT
+            || from === constants.RIGHT     && to === constants.DOWN
+            || from === constants.DOWN      && to === constants.LEFT
+            || from === constants.LEFT      && to === constants.UP;
+    },
+    oppositeFacing: function(from,to) {
+        return from === constants.UP        && to === constants.DOWN
+            || from === constants.RIGHT     && to === constants.LEFT
+            || from === constants.DOWN      && to === constants.UP
+            || from === constants.LEFT      && to === constants.RIGHT;
+    },
+    getAdjacentType: function(type, facing) {
+        return constants.COLOR_DATA[constants.TYPED_COLOR_DATA[type][facing]].type;
+    }
+};

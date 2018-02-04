@@ -1,130 +1,8 @@
 const Cube = (function () {
-    class Face {
-        constructor(type) {
-            this.face = [
-                [type, type, type],
-                [type, type, type],
-                [type, type, type]
-            ];
-
-            this.up = undefined;
-            this.right = undefined;
-            this.down = undefined;
-            this.left = undefined;
-        }
-
-        clone() {
-            return [
-                [this.face[0][0],this.face[0][1],this.face[0][2]],
-                [this.face[1][0],this.face[1][1],this.face[1][2]],
-                [this.face[2][0],this.face[2][1],this.face[2][2]]
-            ];
-        }
-
-        cloneFrom(parent) {
-            this.face[0][0] = parent[0][0];
-            this.face[0][1] = parent[0][1];
-            this.face[0][2] = parent[0][2];
-            this.face[1][0] = parent[1][0];
-            this.face[1][1] = parent[1][1];
-            this.face[1][2] = parent[1][2];
-            this.face[2][0] = parent[2][0];
-            this.face[2][1] = parent[2][1];
-            this.face[2][2] = parent[2][2];
-        }
-
-        setAdjacentFaces(up, right, down, left) {
-            this.up = up;
-            this.right = right;
-            this.down = down;
-            this.left = left;
-        }
-
-        getFaceType() {
-            return this.face[1][1];
-        }
-
-        getAdjacentTiles(adjFace) {
-            switch(adjFace.getFaceType()) {
-                case this.up.getFaceType() :
-                    return [this.face[0][0], this.face[1][0], this.face[2][0]];
-                case this.right.getFaceType() :
-                    return [this.face[2][0], this.face[2][1], this.face[2][2]];
-                case this.down.getFaceType() :
-                    return [this.face[2][2], this.face[1][2], this.face[0][2]];
-                case this.left.getFaceType() :
-                    return [this.face[0][2], this.face[0][1], this.face[0][0]];
-                default :
-                    throw "not an adjacent face";
-            }
-        }
-
-        setAdjacentTiles(adjFace, tiles) {
-            switch(adjFace.getFaceType()) {
-                case this.up.getFaceType() :
-                    this.face[0][0] = tiles[0];
-                    this.face[1][0] = tiles[1];
-                    this.face[2][0] = tiles[2];
-                    return;
-                case this.right.getFaceType() :
-                    this.face[2][0] = tiles[0];
-                    this.face[2][1] = tiles[1];
-                    this.face[2][2] = tiles[2];
-                    return;
-                case this.down.getFaceType() :
-                    this.face[2][2] = tiles[0];
-                    this.face[1][2] = tiles[1];
-                    this.face[0][2] = tiles[2];
-                    return;
-                case this.left.getFaceType() :
-                    this.face[0][2] = tiles[0];
-                    this.face[0][1] = tiles[1];
-                    this.face[0][0] = tiles[2];
-                    return;
-                default :
-                    throw "not an adjacent face";
-            }
-        }
-
-        rotate(ccw = false) {
-            let upTiles = this.up       .getAdjacentTiles(this);
-            let rightTiles = this.right .getAdjacentTiles(this);
-            let downTiles = this.down   .getAdjacentTiles(this);
-            let leftTiles = this.left   .getAdjacentTiles(this);
-
-            if(ccw) {
-                this.up     .setAdjacentTiles(this,rightTiles);
-                this.right  .setAdjacentTiles(this,downTiles);
-                this.down   .setAdjacentTiles(this,leftTiles);
-                this.left   .setAdjacentTiles(this,upTiles);
-
-                this.face = [
-                    [this.face[2][0], this.face[1][0], this.face[0][0]],
-                    [this.face[2][1], this.face[1][1], this.face[0][1]],
-                    [this.face[2][2], this.face[1][2], this.face[0][2]],
-                ]
-            } else {
-                this.up     .setAdjacentTiles(this,leftTiles);
-                this.right  .setAdjacentTiles(this,upTiles);
-                this.down   .setAdjacentTiles(this,rightTiles);
-                this.left   .setAdjacentTiles(this,downTiles);
-
-                this.face = [
-                    [this.face[0][2], this.face[1][2], this.face[2][2]],
-                    [this.face[0][1], this.face[1][1], this.face[2][1]],
-                    [this.face[0][0], this.face[1][0], this.face[2][0]],
-                ]
-            }
-        }
-
-        getFaceAt(i,j) {
-            return this.face[i][j];
-        }
-    }
 
     const mockFunction = function () {};
     const mockFace = {
-        getFaceAt: function getFaceAt() { return 0; },
+        getTileAt: function getFaceAt() { return 0; },
         rotate: mockFunction
     };
 
@@ -212,7 +90,7 @@ const Cube = (function () {
         getTileAtPos(i,j) {
             if(i<0 || i>constants.HORZ_TILES || j<0 || j>constants.VERT_TILES) return 0;
 
-            return this.getFaceForTile(i,j).getFaceAt(
+            return this.getFaceForTile(i,j).getTileAt(
                 i % constants.TILES_PER_FACE,
                 j % constants.TILES_PER_FACE);
         }
@@ -271,6 +149,22 @@ const Cube = (function () {
                 case constants.BLUE:
                     this.rotate(rotationCommand.ccw, 2, 1); return;
             }
+        }
+
+        findSideTilePosition(mainType, type2) {
+            let out = this.whiteFace.findSideTilePosition(mainType, type2)
+                || this.redFace.findSideTilePosition(mainType, type2)
+                || this.orangeFace.findSideTilePosition(mainType, type2)
+                || this.yellowFace.findSideTilePosition(mainType, type2)
+                || this.greenFace.findSideTilePosition(mainType, type2)
+                || this.blueFace.findSideTilePosition(mainType, type2);
+
+            if(out === null) throw "Tile position not found. " + {
+                mainType: mainType,
+                type2: type2
+            };
+
+            return out;
         }
 
         static colorFromType(type) {
