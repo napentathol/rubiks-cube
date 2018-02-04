@@ -116,7 +116,13 @@ constants.UTILS = {
             to: to,
         }
     },
-    turnFromFacingToFacingCounterClockwise: function(from,to) {
+    counterClockwiseFacing: function(from, to) {
+        return from === constants.UP        && to === constants.LEFT
+            || from === constants.RIGHT     && to === constants.UP
+            || from === constants.DOWN      && to === constants.RIGHT
+            || from === constants.LEFT      && to === constants.DOWN;
+    },
+    clockwiseFacing: function(from, to) {
         return from === constants.UP        && to === constants.RIGHT
             || from === constants.RIGHT     && to === constants.DOWN
             || from === constants.DOWN      && to === constants.LEFT
