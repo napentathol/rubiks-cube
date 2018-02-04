@@ -25,9 +25,9 @@ const rubik = (function () {
     function tick() {
         try {
             if (solver !== null) {
-                cube.commandRotate(solver.getRotation(cube.getTileArray()));
+                cube.commandRotate(solver.getRotation(cube.getTileObj()));
 
-                if(solver.isCompleted(cube.getTileArray())) {
+                if(solver.isCompleted(cube.getTileObj())) {
                     solver = null;
                 }
             }
@@ -43,26 +43,25 @@ const rubik = (function () {
         cube.render(ctx);
     }
 
-    let interval = window.setInterval(tick, constants.MS_BETWEEN_TICKS);
+    window.setInterval(tick, constants.MS_BETWEEN_TICKS);
 
     return {
         setSolver: function setSolver(s) {
             solver = s;
         },
-        logTileArray: function logTileArray() {
-            console.log(cube.getTileArray());
-        },
-        logCube: function log() {
-            console.log(JSON.stringify(cube));
-        },
-        getCube: function getCube() {
-            return cube;
+        logTileObject: function logTileObject() {
+            console.log(cube.getTileObj());
         },
         save: function save() {
-            localStorage.setItem(constants.STORAGE_LOCATION, JSON.stringify(cube.getTileArray()));
+            localStorage.setItem(constants.STORAGE_LOCATION, JSON.stringify(cube.getTileObj()));
         },
         load: function load() {
-            cube.restoreFromTileArray(JSON.parse(localStorage.getItem(constants.STORAGE_LOCATION)));
+            cube.restoreFromTileObj(JSON.parse(localStorage.getItem(constants.STORAGE_LOCATION)));
+            render();
+        },
+        reset: function reset() {
+            cube = new Cube();
+            render();
         }
     }
 })();

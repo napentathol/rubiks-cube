@@ -13,6 +13,26 @@ const Cube = (function () {
             this.left = undefined;
         }
 
+        clone() {
+            return [
+                [this.face[0][0],this.face[0][1],this.face[0][2]],
+                [this.face[1][0],this.face[1][1],this.face[1][2]],
+                [this.face[2][0],this.face[2][1],this.face[2][2]]
+            ];
+        }
+
+        cloneFrom(parent) {
+            this.face[0][0] = parent[0][0];
+            this.face[0][1] = parent[0][1];
+            this.face[0][2] = parent[0][2];
+            this.face[1][0] = parent[1][0];
+            this.face[1][1] = parent[1][1];
+            this.face[1][2] = parent[1][2];
+            this.face[2][0] = parent[2][0];
+            this.face[2][1] = parent[2][1];
+            this.face[2][2] = parent[2][2];
+        }
+
         setAdjacentFaces(up, right, down, left) {
             this.up = up;
             this.right = right;
@@ -100,26 +120,22 @@ const Cube = (function () {
         getFaceAt(i,j) {
             return this.face[i][j];
         }
-        setFaceAt(i,j,type) {
-            this.face[i][j] = type;
-        }
     }
 
     const mockFunction = function () {};
     const mockFace = {
         getFaceAt: function getFaceAt() { return 0; },
-        setFaceAt: mockFunction,
         rotate: mockFunction
     };
 
     return class Cube {
         constructor() {
-            this.whiteFace = new Face(6);
-            this.redFace = new Face(2);
-            this.yellowFace = new Face(5);
-            this.orangeFace = new Face(4);
-            this.greenFace = new Face(1);
-            this.blueFace = new Face(3);
+            this.whiteFace =    new Face(constants.WHITE);
+            this.redFace =      new Face(constants.RED);
+            this.yellowFace =   new Face(constants.YELLOW);
+            this.orangeFace =   new Face(constants.ORANGE);
+            this.greenFace =    new Face(constants.GREEN);
+            this.blueFace =     new Face(constants.BLUE);
 
             this.whiteFace  .setAdjacentFaces(this.orangeFace,  this.blueFace,   this.redFace,    this.greenFace);
             this.redFace    .setAdjacentFaces(this.whiteFace,   this.blueFace,   this.yellowFace, this.greenFace);
@@ -166,25 +182,30 @@ const Cube = (function () {
             }
         }
 
-        getTileArray() {
-            let out = [];
+        getTileObj() {
+            let out = {};
 
-            for( let i = 0; i < constants.HORZ_TILES; i++) {
-                out[i] = [];
-
-                for( let j = 0; j < constants.VERT_TILES; j++) {
-                    out[i][j] = this.getTileAtPos(i, j);
-                }
-            }
+            out.version = '0.1';
+            out.white =     this.whiteFace.clone();
+            out.red =       this.redFace.clone();
+            out.orange =    this.orangeFace.clone();
+            out.yellow =    this.yellowFace.clone();
+            out.green =     this.greenFace.clone();
+            out.blue =      this.blueFace.clone();
 
             return out;
         }
 
-        restoreFromTileArray(array) {
-            for( let i = 0; i < constants.HORZ_TILES; i++) {
-                for( let j = 0; j < constants.VERT_TILES; j++) {
-                    this.setTileAtPos(i,j,array[i][j]);
-                }
+        restoreFromTileObj(tileObj) {
+            if(tileObj.version === '0.1') {
+                this.whiteFace  .cloneFrom(tileObj.white);
+                this.redFace    .cloneFrom(tileObj.red);
+                this.orangeFace .cloneFrom(tileObj.orange);
+                this.yellowFace .cloneFrom(tileObj.yellow);
+                this.greenFace  .cloneFrom(tileObj.green);
+                this.blueFace   .cloneFrom(tileObj.blue);
+            } else {
+                throw "Unknown version!";
             }
         }
 
@@ -194,10 +215,6 @@ const Cube = (function () {
             return this.getFaceForTile(i,j).getFaceAt(
                 i % constants.TILES_PER_FACE,
                 j % constants.TILES_PER_FACE);
-        }
-
-        setTileAtPos(i,j,type) {
-            this.getFaceForTile(i, j).setFaceAt(i % constants.TILES_PER_FACE, j % constants.TILES_PER_FACE, type);
         }
 
         getFaceForTile(i,j) {
@@ -227,21 +244,8 @@ const Cube = (function () {
         }
 
         rotate(ccw, i, j) {
-            let face = mockFace;
-            if( j === 0 && i === 1 ) {
-                face = this.whiteFace;
-            } else if( j === 1 && i === 0 ) {
-                face = this.greenFace;
-            } else if( j === 1 && i === 1 ) {
-                face = this.redFace;
-            } else if( j === 1 && i === 2 ) {
-                face = this.blueFace;
-            } else if( j === 2 && i === 1 ) {
-                face = this.yellowFace;
-            } else if( j === 3 && i === 1 ) {
-                face = this.orangeFace;
-            }
-            face.rotate(ccw);
+            this.getFaceForTile(i * constants.TILES_PER_FACE, j * constants.TILES_PER_FACE)
+                .rotate(ccw);
         }
 
         commandRotate(rotationCommand) {
@@ -254,12 +258,18 @@ const Cube = (function () {
 
             switch(rotationCommand.face) {
                 default: throw "Invalid face!";
-                case 1: this.rotate(rotationCommand.ccw, 0, 1); return; // green
-                case 2: this.rotate(rotationCommand.ccw, 1, 1); return; // red
-                case 3: this.rotate(rotationCommand.ccw, 2, 1); return; // blue
-                case 4: this.rotate(rotationCommand.ccw, 1, 3); return; // orange
-                case 5: this.rotate(rotationCommand.ccw, 1, 2); return; // yellow
-                case 6: this.rotate(rotationCommand.ccw, 1, 0); return; // white
+                case constants.WHITE:
+                    this.rotate(rotationCommand.ccw, 1, 0); return;
+                case constants.RED:
+                    this.rotate(rotationCommand.ccw, 1, 1); return;
+                case constants.ORANGE:
+                    this.rotate(rotationCommand.ccw, 1, 3); return;
+                case constants.YELLOW:
+                    this.rotate(rotationCommand.ccw, 1, 2); return;
+                case constants.GREEN:
+                    this.rotate(rotationCommand.ccw, 0, 1); return;
+                case constants.BLUE:
+                    this.rotate(rotationCommand.ccw, 2, 1); return;
             }
         }
 
@@ -267,17 +277,17 @@ const Cube = (function () {
             switch(type) {
                 default:
                     return '#333';
-                case 1:
+                case constants.GREEN:
                     return '#3c0';
-                case 2:
+                case constants.RED:
                     return '#c03';
-                case 3:
+                case constants.BLUE:
                     return '#03c';
-                case 4:
+                case constants.ORANGE:
                     return '#e70';
-                case 5:
+                case constants.YELLOW:
                     return '#ee0';
-                case 6:
+                case constants.WHITE:
                     return '#ccc'
             }
         }
